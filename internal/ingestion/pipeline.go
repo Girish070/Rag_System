@@ -52,7 +52,7 @@ func (p *Pipeline) Run(ctx context.Context, source datasource.DataSource) error 
 		return err
 	}
 
-	enrichedChunks, err := p.embedder.Apply(chunks)
+	enrichedChunks, err := p.enricher.Apply(chunks)
 	if err != nil {
 		return err
 	}
