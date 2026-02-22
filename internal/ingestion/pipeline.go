@@ -3,6 +3,7 @@ package ingestion
 import (
 	"context"
 	"rag-ingestion/internal/chunking"
+	"rag-ingestion/internal/datasource"
 	"rag-ingestion/internal/embedding"
 	"rag-ingestion/internal/enrichment"
 	"rag-ingestion/internal/parser"

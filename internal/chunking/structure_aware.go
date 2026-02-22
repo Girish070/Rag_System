@@ -6,6 +6,8 @@ import (
 	"rag-ingestion/internal/domain/document"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type StructureAwareChunker struct {
@@ -79,11 +81,14 @@ func newChunks(doc *document.Document, content string, index int) document.Chunk
 		Text:       content,
 		DocumentID: doc.ID,
 		Index:      index,
+		Metadata:   metadata,
 	}
 }
 
 func generateChunkID(docID string, index int) string {
-	return docID + "_chunk_" + strconv.Itoa(index)
+	seed := docID + "_chunk_" + strconv.Itoa(index)
+
+	return uuid.NewMD5(uuid.NameSpaceURL, []byte(seed)).String()
 }
 
 func estimateTokens(text string) int {
