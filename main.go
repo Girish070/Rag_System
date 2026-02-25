@@ -34,7 +34,7 @@ func main() {
 	enricher := enrichment.NewNoOpEnricher()
 
 	// Connect to DB (Use your WSL IP here!)
-	vectorStore, err := storage.NewQdrantStore("172.31.97.208", 6334, "rag_knowledge_base")
+	vectorStore, err := storage.NewQdrantStore("172.28.202.78", 6334, "rag_knowledge_base")
 	if err != nil {
 		log.Fatalf("Failed to connect to Qdrant: %v", err)
 	}
