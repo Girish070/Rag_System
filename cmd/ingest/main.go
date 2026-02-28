@@ -32,7 +32,7 @@ func main() {
 	chunker := chunking.NewStructureAwareChunker(800, 100)
 	enricher := enrichment.NewNoOpEnricher()
 
-	vectoreStore, err := storage.NewQdrantStore("172.22.167.9", 6334, "Rag_DataBase")
+	vectoreStore, err := storage.NewQdrantStore("172.19.171.248", 6334, "Rag_DataBase")
 	if err != nil {
 		log.Fatalf("Failed to connect Qdrant store: %v\n", err)
 	}

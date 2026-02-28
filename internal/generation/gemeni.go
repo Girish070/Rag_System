@@ -74,3 +74,42 @@ func (g *GeminiGenerator) GenerateAnswer(query string, ctxChunk []document.Chunk
 
 	return result.Message.Content, nil
 }
+
+func (g *GeminiGenerator) ImproveQuery(userQuery string) (string, error) {
+	systemPrompt := "You are a search assistant. Rewrite the user's question into 3-5 technical keywords. Return ONLY the keywords."
+
+	payload := map[string]interface{}{
+		"model":  g.model,
+		"stream": false,
+		"messages": []map[string]string{
+			{"role": "system", "content": systemPrompt},
+			{"role": "user", "content": userQuery},
+		},
+	}
+	jsonByte, _ := json.Marshal(payload)
+
+	client := &http.Client{Timeout: 60 * time.Second}
+	req, _ := http.NewRequest("POST", g.url, bytes.NewBuffer(jsonByte))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Message struct {
+			Content string `json:"content"`
+		} `json:"message"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	fmt.Printf("DEBUG: AI Raw Response: '%s'\n", result.Message.Content)
+
+	cleanQuery := strings.TrimSpace(strings.ReplaceAll(result.Message.Content, "/", ""))
+	return cleanQuery, nil
+}
