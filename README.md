@@ -1,7 +1,3 @@
-Here is a comprehensive, professional `README.md` file tailored exactly to your repository's structure and code. It covers the full-stack architecture, the AI agent fallback logic, and step-by-step setup instructions.
-
-You can copy and paste this directly into a `README.md` file in the **root** of your `Rag` repository.
-
 ```markdown
 # 🧠 GenUI Agentic RAG System
 
