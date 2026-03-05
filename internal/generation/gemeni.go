@@ -31,7 +31,7 @@ func (g *GeminiGenerator) GenerateAnswer(query string, ctxChunk []document.Chunk
 	}
 
 	// 2. Prepare the messages
-	systemPrompt := "You are a coding assistant. Answer the question using only the provided context."
+	systemPrompt := "You are a helpful assistant. Answer the question strictly using the provided context. If the context contains code, explain it. If it contains text, summarize it."
 	userMessage := fmt.Sprintf("Context:\n%s\n\nQuestion: %s", contextBuilder.String(), query)
 
 	payload := map[string]interface{}{
@@ -76,7 +76,7 @@ func (g *GeminiGenerator) GenerateAnswer(query string, ctxChunk []document.Chunk
 }
 
 func (g *GeminiGenerator) ImproveQuery(userQuery string) (string, error) {
-	systemPrompt := "You are a search assistant. Rewrite the user's question into 3-5 technical keywords. Return ONLY the keywords."
+	systemPrompt := "You are a helpful assistant. Answer the question strictly using the provided context. If the context contains code, explain it. If it contains text, summarize it."
 
 	payload := map[string]interface{}{
 		"model":  g.model,

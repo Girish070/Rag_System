@@ -12,6 +12,7 @@ import (
 	"rag-ingestion/internal/embedding"
 	"rag-ingestion/internal/enrichment"
 	"rag-ingestion/internal/ingestion"
+	"rag-ingestion/internal/parser"
 	"rag-ingestion/internal/parser/implementation"
 	"rag-ingestion/internal/storage"
 	"strings"
@@ -24,22 +25,27 @@ func main() {
 	targetDir := flag.String("dir", ".", "Directory to ingest")
 	flag.Parse()
 
+	// 1. Load Environment
 	if err := godotenv.Load("../../.env"); err != nil {
 		log.Println("Warning: No .env file found")
 	}
+
+	// 2. Setup Components
 	embedder := embedding.NewOllamaEmbedder()
-	codeParser := implementation.NewCodeParser("go")
 	chunker := chunking.NewStructureAwareChunker(800, 100)
 	enricher := enrichment.NewNoOpEnricher()
 
-	vectoreStore, err := storage.NewQdrantStore("172.19.171.248", 6334, "Rag_DataBase")
+	// ✅ FIXED: Removed the trailing space inside the quotes!
+	vectorStore, err := storage.NewQdrantStore("172.20.128.192", 6334, "Rag_DataBase")
 	if err != nil {
 		log.Fatalf("Failed to connect Qdrant store: %v\n", err)
 	}
 
-	pipeLine := ingestion.NewPipeline(codeParser, chunker, enricher, embedder, vectoreStore)
+	// 3. Initialize Both Parsers (Student Mode Activated 🎓)
+	goParser := implementation.NewCodeParser("go")
+	pdfParser := implementation.NewPdfParser()
 
-	fmt.Printf("Starting Ingestion on: %s", *targetDir)
+	fmt.Printf("--- 🦖 STARTING INGESTION ON: %s ---\n", *targetDir)
 
 	count := 0
 	err = filepath.Walk(*targetDir, func(path string, info os.FileInfo, err error) error {
@@ -52,25 +58,42 @@ func main() {
 			}
 			return nil
 		}
+
+		// 4. Smart Parser Selection
 		ext := strings.ToLower(filepath.Ext(path))
-		if ext == ".go" || ext == ".md" {
-			fmt.Println("Processing: %s...", path)
+		var activeParser parser.Parser
 
-			source := datasource.NewFileSource(path)
-
-			err := pipeLine.Run(context.Background(), source)
-			if err != nil {
-				fmt.Printf("Failed: %v\n", err)
-			} else {
-				fmt.Printf("Done \n")
-				count++
-			}
-			time.Sleep(50 * time.Millisecond)
+		switch ext {
+		case ".go":
+			activeParser = goParser
+		case ".pdf": // 👈 Now supports PDFs!
+			activeParser = pdfParser
+			fmt.Printf("📄 Found PDF: %s\n", info.Name())
+		default:
+			return nil
 		}
+
+		fmt.Printf("Processing: %s...\n", info.Name())
+
+		// 5. Create Pipeline for this file
+		pipeLine := ingestion.NewPipeline(activeParser, chunker, enricher, embedder, vectorStore)
+		source := datasource.NewFileSource(path)
+
+		err = pipeLine.Run(context.Background(), source)
+		if err != nil {
+			fmt.Printf("❌ Failed: %v\n", err)
+		} else {
+			fmt.Printf("✅ Done\n")
+			count++
+		}
+
+		// Tiny sleep to be nice to Ollama
+		time.Sleep(50 * time.Millisecond)
 		return nil
 	})
+
 	if err != nil {
 		log.Fatalf("Error Walking Path %v", err)
 	}
-	fmt.Printf("Ingestion Complete, Processed %d files \n", count)
+	fmt.Printf("\n--- 🎉 INGESTION COMPLETE. Processed %d files ---\n", count)
 }
