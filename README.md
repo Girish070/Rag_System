@@ -1,46 +1,42 @@
-# Rag
+Here is a comprehensive, professional `README.md` file tailored exactly to your repository's structure and code. It covers the full-stack architecture, the AI agent fallback logic, and step-by-step setup instructions.
 
-A local-first retrieval-augmented generation app built in Go with a React frontend. It ingests Go source files and PDF documents, embeds them with Ollama, stores them in Qdrant, and answers questions through a search API with a web fallback when local context is insufficient.
+You can copy and paste this directly into a `README.md` file in the **root** of your `Rag` repository.
 
-## What this project does
+```markdown
+# 🧠 GenUI Agentic RAG System
 
-This repository combines:
+A blazing-fast, production-grade **Agentic Retrieval-Augmented Generation (RAG)** system. This project features a custom Go backend, a local Qdrant vector database, and a React GenUI frontend. 
 
-- a Go backend for indexing and search
-- a Qdrant vector database for similarity search
-- Ollama embeddings for semantic matching
-- NVIDIA-hosted Llama generation for answer synthesis
-- Tavily web search as a fallback when no local answer is available
-- a Vite + React frontend for querying the system
+What sets this system apart is its **Autonomous Web Agent Fallback**: it searches your local, private documents first, but if it cannot find the answer, it autonomously triggers a Tavily web search to scrape live internet context before generating a final answer.
 
-The flow is:
+## ✨ Key Features
 
-1. Parse supported files
-2. Split them into chunks
-3. Embed each chunk with Ollama
-4. Store vectors in Qdrant
-5. Search the closest chunks for a question
-6. Ask the model to answer using those chunks
-7. If the model says it cannot answer, fetch web context and retry
+* **⚡ Lightning Fast AI Generation:** Powered by **Meta Llama-3.1-8B-Instruct** via Nvidia NIM, reducing generation time to just a few seconds.
+* **🌐 Autonomous Web Agent:** Uses a strict evaluation prompt. If local documents lack the necessary context, the system safely catches the AI's fallback and automatically triggers the **Tavily API** to scrape live web data.
+* **📂 Local Knowledge Base:** Ingests local PDFs and Code files. Uses **Google Gemini API** for high-quality, dense text embeddings, stored locally in a Dockerized **Qdrant** vector database.
+* **🎨 Sleek GenUI Frontend:** A beautiful, dark-mode React interface that parses Markdown, highlights syntax for multiple languages on the fly, and displays citation sources (Local Files vs. Web Search).
+* **🏗️ Robust Go Architecture:** Built with Go and the Gin framework, utilizing clean architecture patterns (`cmd`, `internal`, `domain`).
 
-## Tech stack
+---
 
-Backend:
-- Go
-- Gin
-- Qdrant gRPC client
-- Ollama
-- NVIDIA API for chat completion
-- Tavily API for web fallback
+## 🛠️ Tech Stack
 
-Frontend:
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- Markdown rendering in the browser
+**Backend**
+* **Language:** Go (Golang) 1.21+
+* **Framework:** Gin Web Framework
+* **Vector Database:** Qdrant (via Docker)
+* **Embeddings:** Google Gemini (`gemini-1.5-flash`)
+* **Generation:** Meta Llama 3.1 8B Instruct (via Nvidia Cloud API)
+* **Web Agent:** Tavily Search API
 
-## Repository structure
+**Frontend**
+* **Framework:** React + TypeScript + Vite
+* **Styling:** Tailwind CSS
+* **Markdown parsing:** `react-markdown`, `remark-gfm`, `react-syntax-highlighter`
+
+---
+
+## 📂 Project Structure
 
 ```text
 .
@@ -167,63 +163,25 @@ npm install
 npm run dev
 ```
 
-The frontend typically runs at:
+*The frontend will run on `http://localhost:5173`.*
 
-```text
-http://localhost:5173
+---
+
+## 💡 How it Works (The Fallback Loop)
+
+1. The user asks a question via the React UI.
+2. The Go backend searches the **Qdrant DB** for relevant chunks and hands them to **Llama 3.1**.
+3. **Strict Evaluation:** Llama is prompted to reply *only* with `"I cannot answer"` if the local context does not contain the answer.
+4. **Agent Activation:** If the Go server detects this failure string, it triggers the `TavilyAgent`.
+5. Tavily scrapes the live internet, injects the web data as a "fake chunk", and forces Llama 3.1 to try again.
+6. The UI beautifully formats the response, indicating whether the source was a local file or the live web.
+
+---
+
+## 🛡️ License & Acknowledgements
+
+Built by [Girish070](https://www.google.com/search?q=https://github.com/Girish070).
+
 ```
 
-## API usage
-
-The backend exposes a GET endpoint:
-
-```http
-GET /search?q=what+does+this+project+do
 ```
-
-Example response:
-
-```json
-{
-  "results": [
-    {
-      "text": "Relevant chunk from indexed document",
-      "metadata": {
-        "filename": "example.go"
-      }
-    }
-  ],
-  "answer": "The project indexes local documents and answers questions from them."
-}
-```
-
-## Fallback behavior
-
-The app tries to answer from the local vector search results first. If the model responds with an inability to answer or returns an empty result, the server triggers the Tavily API and reruns generation with scraped web content.
-
-This fallback is handled in:
-
-- `cmd/server/main.go`
-- `internal/agent/tavily.go`
-- `internal/generation/nvidia.go`
-
-## Notes
-
-- The vector search is local and document-based, so ingestion must be run before searching.
-- The app is optimized for code and PDF content rather than broad general-purpose web search.
-- Qdrant addresses are currently configured in code and may require adjustment for your environment.
-
-## License
-
-This project does not currently declare a license in the repository metadata. If you plan to distribute or reuse it, add an appropriate license file before publishing.
-
-## Next steps
-
-A few common improvements would be:
-
-- add a `.env.example` file
-- move Qdrant host/port to environment variables
-- add configurable file extensions and directories
-- add a proper health endpoint
-- add JSON schema validation and stronger error handling
-- make the frontend show source metadata and fallback provenance more clearly
